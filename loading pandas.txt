@@ -1,0 +1,40 @@
+import pandas as pd
+import numpy as np
+import networkx as nx
+from sklearn.semi_supervised import LabelPropagation
+import matplotlib.pyplot as plt
+
+# Load edges and nodes data
+edges = pd.read_csv('/content/musae_git_edges.csv')
+nodes = pd.read_csv('/content/musae_git_target.csv')
+
+# Create a graph from the edges data
+G = nx.from_pandas_edgelist(edges, 'id_1', 'id_2')
+
+# Ensure 'ml_target' is a NumPy array and has the correct shape
+labels = nodes['ml_target'].values.reshape(-1, 1)
+
+# Perform label propagation clustering
+lp = LabelPropagation(kernel='knn', n_neighbors=10)
+
+
+# Generate the graph layout
+pos = nx.spring_layout(G)
+
+# Draw the network graph
+plt.figure(figsize=(10, 10))
+plt.axis('off')
+
+# Map labels to colors using a categorical colormap
+cmap = plt.get_cmap('tab10')
+
+nx.draw_networkx_nodes(G, pos, node_size=30, node_color=colors)
+nx.draw_networkx_edges(G, pos, alpha=0.1)
+plt.show()
+
+# Extract communities
+communities = {}
+for node, label in zip(G.nodes, lp.transduction_.ravel()):
+    communities.setdefault(label, []).append(node)
+
+print(communities)

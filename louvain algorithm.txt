@@ -1,0 +1,32 @@
+import pandas as pd
+import pandas
+import csv
+import numpy as np
+import networkx as nx
+from networkx.algorithms import community
+import community.community_louvain as community_louvain
+from sklearn.metrics import normalized_mutual_info_score, f1_score
+import matplotlib.pyplot as plt
+
+G = nx.read_edgelist('/content/musae_git_edges.csv', delimiter =',', nodetype=str)
+targets = pd.read_csv('/content/musae_git_target.csv')
+edges=pd.read_csv('/content/musae_git_edges.csv')
+G = nx.from_pandas_edgelist(edges,source='id_1',target='id_2')
+partition = community_louvain.best_partition(G)
+print("Number of communities: ", len(set(partition.values())))
+ground_truth = {}
+with open("/content/musae_git_target.csv","r") as f:
+  reader = csv.reader(f)
+  for line in reader:
+    if len(line) != 2:
+      continue
+    node, community = line
+    ground_truth[int(node)] = int(community)
+predicted_communities = np.array(list(partition.values()))
+accuracy = predicted_communities / len(G)
+print("Accuracy: ", accuracy)
+pos = nx.spring_layout(G)
+nx.draw_networkx_nodes(G, pos, node_size=10, cmap=plt.cm.tab20, node_color=list(partition.values()))
+nx.draw_networkx_edges(G, pos, alpha=0.5)
+plt.axis("off")
+plt.show()
